@@ -1,0 +1,43 @@
+services:
+  wordpress:
+    user: ${USER_UID}:${USER_GID}
+    image: wordpress:php8.5-apache
+    ports:
+      - "${XO_WORDPRESS_PORT:-8080}:80"
+    volumes:
+      - ${XO_ROOT_DIR}/${XO_WORDPRESS_ROOT}:/var/www/html/:rw
+      - ${XO_ROOT_DIR}/${XO_WORDPRESS_THEME_DIR}:/var/www/html/wp-content/themes/${XO_WORDPRESS_THEME}:rw
+    env_file:
+      - ${XO_ROOT_DIR}/.env
+      - ${XO_ROOT_DIR}/.env.local
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tty: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  wpcli:
+    user: ${USER_UID}:${USER_GID}
+    image: wordpress:cli-php8.5
+    profiles: ["cli"]
+    entrypoint: ["wp"]
+    working_dir: /var/www/html
+    environment:
+      HOME: /tmp
+    volumes:
+      - ${XO_ROOT_DIR}/${XO_WORDPRESS_ROOT}:/var/www/html/:rw
+      - ${XO_ROOT_DIR}/${XO_WORDPRESS_THEME_DIR}:/var/www/html/wp-content/themes/${XO_WORDPRESS_THEME}:rw
+    env_file:
+      - ${XO_ROOT_DIR}/.env
+      - ${XO_ROOT_DIR}/.env.local
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  default:
+    external: true
+    name: ${XO_PROJECT_NAME}

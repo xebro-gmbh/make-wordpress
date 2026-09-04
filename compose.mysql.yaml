@@ -1,0 +1,10 @@
+services:
+  wordpress:
+    depends_on:
+      mysql:
+        condition: service_healthy
+        restart: true
+  wpcli:
+    depends_on:
+      mysql:
+        condition: service_healthy
