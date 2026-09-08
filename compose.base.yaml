@@ -7,6 +7,12 @@ services:
     volumes:
       - ${XO_ROOT_DIR}/${XO_WORDPRESS_ROOT}:/var/www/html/:rw
       - ${XO_ROOT_DIR}/${XO_WORDPRESS_THEME_DIR}:/var/www/html/wp-content/themes/${XO_WORDPRESS_THEME}:rw
+      - ${XO_ROOT_DIR}/${XO_WORDPRESS_PLUGINS_DIR}:/var/www/html/wp-content/plugins/:rw
+    environment:
+      # Cron läuft im wpcron-Sidecar; HTTPS-Erkennung hinter dem Proxy.
+      WORDPRESS_CONFIG_EXTRA: |
+        define('DISABLE_WP_CRON', true);
+        if (isset($$_SERVER['HTTP_X_FORWARDED_PROTO']) && $$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') { $$_SERVER['HTTPS'] = 'on'; }
     env_file:
       - ${XO_ROOT_DIR}/.env
       - ${XO_ROOT_DIR}/.env.local
@@ -31,11 +37,32 @@ services:
     volumes:
       - ${XO_ROOT_DIR}/${XO_WORDPRESS_ROOT}:/var/www/html/:rw
       - ${XO_ROOT_DIR}/${XO_WORDPRESS_THEME_DIR}:/var/www/html/wp-content/themes/${XO_WORDPRESS_THEME}:rw
+      - ${XO_ROOT_DIR}/${XO_WORDPRESS_PLUGINS_DIR}:/var/www/html/wp-content/plugins/:rw
     env_file:
       - ${XO_ROOT_DIR}/.env
       - ${XO_ROOT_DIR}/.env.local
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  # Externer Cron (DISABLE_WP_CRON ist gesetzt): gleiche Mechanik wie prod
+  # (ECS-Service cms-cron), damit lokal nichts "zufällig" über Page-Hits läuft.
+  wpcron:
+    user: ${USER_UID}:${USER_GID}
+    image: wordpress:cli-php8.5
+    entrypoint: ["sh", "-c"]
+    command: ["while true; do wp cron event run --due-now --path=/var/www/html 2>/dev/null || true; sleep 60; done"]
+    working_dir: /var/www/html
+    environment:
+      HOME: /tmp
+    volumes:
+      - ${XO_ROOT_DIR}/${XO_WORDPRESS_ROOT}:/var/www/html/:rw
+      - ${XO_ROOT_DIR}/${XO_WORDPRESS_THEME_DIR}:/var/www/html/wp-content/themes/${XO_WORDPRESS_THEME}:rw
+      - ${XO_ROOT_DIR}/${XO_WORDPRESS_PLUGINS_DIR}:/var/www/html/wp-content/plugins/:rw
+    env_file:
+      - ${XO_ROOT_DIR}/.env
+      - ${XO_ROOT_DIR}/.env.local
+    depends_on:
+      - wordpress
 
 networks:
   default:

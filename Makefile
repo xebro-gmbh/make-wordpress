@@ -1,10 +1,11 @@
 #--------------------------
-# xebro GmbH - wordpress - 1.0.0
+# xebro GmbH - wordpress - 1.1.0
 #--------------------------
 
 .PHONY:
 
 XO_WORDPRESS_PORT ?= 8080
+XO_WORDPRESS_URL ?= http://localhost:${XO_WORDPRESS_PORT}
 
 WORDPRESS_DIR := $(patsubst $(XO_ROOT_DIR)/%,./%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 WORDPRESS_DIR_ABS := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -20,6 +21,9 @@ wordpress.help:
 wordpress.logs: ## Show wordpress container logs
 	@${DOCKER_COMPOSE} logs -f wordpress
 
+wordpress.cron.logs: ## Show wpcron sidecar logs
+	@${DOCKER_COMPOSE} logs -f wpcron
+
 wordpress.bash: ## Open bash inside the wordpress container
 	@${DOCKER_WORDPRESS} bash
 
@@ -33,12 +37,15 @@ wordpress.install:
 	$(call ensure_lines,.gitignore,${WORDPRESS_DIR}config/.gitignore)
 	@mkdir -p ${XO_ROOT_DIR}/${XO_WORDPRESS_ROOT}
 	@mkdir -p ${XO_ROOT_DIR}/${XO_WORDPRESS_THEME_DIR}
+	@mkdir -p ${XO_ROOT_DIR}/${XO_WORDPRESS_PLUGINS_DIR}
+	@mkdir -p ${XO_CONFIG_DIR}/proxy
+	$(call ensure_file,${WORDPRESS_DIR_ABS}config/90-wordpress.conf.template,${XO_CONFIG_DIR}/proxy)
 
 wordpress.setup: ## Install WordPress core (idempotent) and activate the project theme
 	$(call target_name,$@)
 	@${DOCKER_COMPOSE} up -d --wait wordpress
 	@${DOCKER_WPCLI} core is-installed 2>/dev/null || ${DOCKER_WPCLI} core install \
-		--url="http://localhost:${XO_WORDPRESS_PORT}" \
+		--url="${XO_WORDPRESS_URL}" \
 		--title="$${WORDPRESS_TITLE}" \
 		--admin_user="$${WORDPRESS_ADMIN_USER}" \
 		--admin_password="$${WORDPRESS_ADMIN_PASSWORD}" \
@@ -49,16 +56,24 @@ wordpress.setup: ## Install WordPress core (idempotent) and activate the project
 wordpress.restart: ## Restart wordpress container
 	@${DOCKER_COMPOSE} restart wordpress --no-deps
 
+wordpress.post_start:
+	@$(call target_name,"WordPress")
+	@printf "${Purple}WordPress:   ${Yellow}${XO_WORDPRESS_URL}\n"
+	@printf "${Purple}Admin:       ${Yellow}${XO_WORDPRESS_URL}/wp-admin ${Gray}($${WORDPRESS_ADMIN_USER} / $${WORDPRESS_ADMIN_PASSWORD})\n"
+
 wordpress.debug: ## Print WordPress component environment
 	@$(call headline,"DEBUGGING WORDPRESS")
 	@printf "${Purple}WORDPRESS_DIR: ${Yellow} ${WORDPRESS_DIR}\n"
 	@printf "${Purple}XO_WORDPRESS_PORT: ${Yellow} ${XO_WORDPRESS_PORT}\n"
+	@printf "${Purple}XO_WORDPRESS_URL: ${Yellow} ${XO_WORDPRESS_URL}\n"
 	@printf "${Purple}XO_WORDPRESS_ROOT: ${Yellow} ${XO_WORDPRESS_ROOT}\n"
 	@printf "${Purple}XO_WORDPRESS_THEME: ${Yellow} ${XO_WORDPRESS_THEME}\n"
 	@printf "${Purple}XO_WORDPRESS_THEME_DIR: ${Yellow} ${XO_WORDPRESS_THEME_DIR}\n"
+	@printf "${Purple}XO_WORDPRESS_PLUGINS_DIR: ${Yellow} ${XO_WORDPRESS_PLUGINS_DIR}\n"
 
 debug: wordpress.debug
 help: wordpress.help
 init: wordpress.setup
 install: wordpress.install
 restart: wordpress.restart
+post_start: wordpress.post_start
