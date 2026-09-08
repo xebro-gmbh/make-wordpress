@@ -3,7 +3,9 @@
 # bundle from docker/config/proxy/ and rendered via envsubst.
 location / {
     proxy_pass http://wordpress:80;
-    proxy_set_header Host              $host;
+    # $http_host keeps a non-default port (multi-instance) — $host strips it
+    # and WordPress would canonical-redirect in a loop
+    proxy_set_header Host              $http_host;
     proxy_set_header X-Forwarded-Proto https;
     proxy_set_header X-Forwarded-Port  ${XO_PROXY_HTTPS_PORT};
     proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;

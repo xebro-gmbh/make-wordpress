@@ -1,6 +1,6 @@
 # make-wordpress
 
-WordPress bundle for the xebro dev-setup (`make-core`). Runs the official
+WordPress bundle for the XDS (`make-core`). Runs the official
 `wordpress:php8.5-apache` image plus a `wpcli` helper service
 (`wordpress:cli-php8.5`, profile `cli`, only started via `docker compose run`)
 and a `wpcron` sidecar (external cron loop — `DISABLE_WP_CRON` is set, same
