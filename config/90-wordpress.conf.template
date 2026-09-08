@@ -1,6 +1,6 @@
-# Route-Snippet des wordpress-Bundles (Default-Route, deshalb 90er-Präfix —
-# spezifischere App-Routen wie 20-shop kommen davor). Wird vom proxy-Bundle
-# aus docker/config/proxy/ geladen und per envsubst gerendert.
+# Route snippet of the wordpress bundle (default route, hence the 90 prefix —
+# more specific app routes like 20-shop come first). Loaded by the proxy
+# bundle from docker/config/proxy/ and rendered via envsubst.
 location / {
     proxy_pass http://wordpress:80;
     proxy_set_header Host              $host;

@@ -9,7 +9,7 @@ services:
       - ${XO_ROOT_DIR}/${XO_WORDPRESS_THEME_DIR}:/var/www/html/wp-content/themes/${XO_WORDPRESS_THEME}:rw
       - ${XO_ROOT_DIR}/${XO_WORDPRESS_PLUGINS_DIR}:/var/www/html/wp-content/plugins/:rw
     environment:
-      # Cron läuft im wpcron-Sidecar; HTTPS-Erkennung hinter dem Proxy.
+      # cron runs in the wpcron sidecar; HTTPS detection behind the proxy.
       WORDPRESS_CONFIG_EXTRA: |
         define('DISABLE_WP_CRON', true);
         if (isset($$_SERVER['HTTP_X_FORWARDED_PROTO']) && $$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') { $$_SERVER['HTTPS'] = 'on'; }
@@ -44,8 +44,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  # Externer Cron (DISABLE_WP_CRON ist gesetzt): gleiche Mechanik wie prod
-  # (ECS-Service cms-cron), damit lokal nichts "zufällig" über Page-Hits läuft.
+  # external cron (DISABLE_WP_CRON is set): same mechanics as production
+  # (ECS service cms-cron), so nothing runs "accidentally" via page hits.
   wpcron:
     user: ${USER_UID}:${USER_GID}
     image: wordpress:cli-php8.5
