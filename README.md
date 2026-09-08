@@ -13,7 +13,7 @@ adds the dependency automatically (see `compose.mysql.yaml`).
 
 | Path | Purpose |
 |---|---|
-| `${XO_WORDPRESS_ROOT}` (default `wordpress/`) | Full WordPress installation, bind-mounted to `/var/www/html`. Populated by the image entrypoint on first start. Gitignored. |
+| `${XO_WORDPRESS_ROOT}` (default `wordpress-core/`) | Full WordPress installation, bind-mounted to `/var/www/html`. Populated by the image entrypoint on first start. Gitignored. Seed-bar — `wordpress/` bleibt frei für ein Projekt-Subrepo (Theme/Plugins via `subrepos.conf`). |
 | `${XO_WORDPRESS_THEME_DIR}` (default `theme/`) | Your project theme, mounted into `wp-content/themes/${XO_WORDPRESS_THEME}`. This is the folder you commit. |
 | `${XO_WORDPRESS_PLUGINS_DIR}` (default `plugins/`) | Mounted as the whole `wp-content/plugins/` — put your own plugins and composer-installed ones (wpackagist) here. |
 
@@ -50,7 +50,7 @@ Seeded once into `.env` (change them there, `make install` keeps your values):
 `XO_WORDPRESS_THEME_DIR`, `XO_WORDPRESS_PLUGINS_DIR`, `WORDPRESS_DB_*`,
 `WORDPRESS_TITLE`, `WORDPRESS_ADMIN_*`, `WORDPRESS_DEBUG`.
 
-Forced on every `make install`: `XO_WORDPRESS_ROOT`.
+`XO_WORDPRESS_ROOT` ist ebenfalls seed-bar (Default `wordpress-core/`).
 
 ## License
 
