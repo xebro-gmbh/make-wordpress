@@ -52,6 +52,10 @@ wordpress.setup: ## Install WordPress core (idempotent) and activate the project
 		--admin_email="$${WORDPRESS_ADMIN_EMAIL}" \
 		--skip-email
 	@${DOCKER_WPCLI} theme activate ${XO_WORDPRESS_THEME}
+	@# plain permalinks would answer every unknown path with the home page
+	@# (200 instead of 404) and break /robots.txt behind the proxy
+	@${DOCKER_WPCLI} rewrite structure "$${WORDPRESS_PERMALINK_STRUCTURE:-/%postname%/}" --hard
+	@${DOCKER_WPCLI} rewrite flush --hard
 
 wordpress.restart: ## Restart wordpress container
 	@${DOCKER_COMPOSE} restart wordpress --no-deps
