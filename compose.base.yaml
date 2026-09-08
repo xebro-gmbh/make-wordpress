@@ -9,6 +9,10 @@ services:
       - ${XO_ROOT_DIR}/${XO_WORDPRESS_THEME_DIR}:/var/www/html/wp-content/themes/${XO_WORDPRESS_THEME}:rw
       - ${XO_ROOT_DIR}/${XO_WORDPRESS_PLUGINS_DIR}:/var/www/html/wp-content/plugins/:rw
     environment:
+      # wp_get_environment_type() defaults to "production" — mark local dev
+      # explicitly so environment-aware plugin code (e.g. 2FA enforcement)
+      # can relax locally.
+      WP_ENVIRONMENT_TYPE: local
       # cron runs in the wpcron sidecar; HTTPS detection behind the proxy.
       WORDPRESS_CONFIG_EXTRA: |
         define('DISABLE_WP_CRON', true);
